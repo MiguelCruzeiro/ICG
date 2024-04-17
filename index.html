@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Improved Three.js Track and Car</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <div id="timer" style="position: absolute; top: 10px; left: 1120px; font-size: 55px; color: white;"></div>
+
+    <script type="module">
+        
+        let scene, camera, renderer, car;
+        import { OrbitControls } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
+        import { GLTFLoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
+        
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); // Sky blue background
+
+            const plane = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshPhongMaterial({ color: 0x00ff00 }));
+            plane.receiveShadow = true; // Enable shadow receiving
+            plane.rotation.x = -Math.PI / 2;
+            plane.position.y = -0.01;
+            scene.add(plane);
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true; // Enable shadow mapping
+            document.body.appendChild(renderer.domElement);
+
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            directionalLight.position.set(-100, 100, 200);
+            directionalLight.castShadow = true; // Enable shadow casting
+            directionalLight.shadow.mapSize.width = 8024; // Width of the shadow map
+            directionalLight.shadow.mapSize.height = 8024; // Height of the shadow map
+            // Adjust shadow camera frustum
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 500;
+            directionalLight.shadow.camera.left = -200;  // Increase left value
+            directionalLight.shadow.camera.right = 200;  // Increase right value
+            directionalLight.shadow.camera.top = 200;    // Increase top value
+            directionalLight.shadow.camera.bottom = -200; // Increase bottom value
+
+            scene.add(directionalLight);
+            
+
+            // Create road  
+            /* const roadGeometry = new THREE.PlaneGeometry(10, 40);
+            const roadMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
+            const road = new THREE.Mesh(roadGeometry, roadMaterial);
+            road.rotation.x = -Math.PI / 2;
+            road.receiveShadow = true; // Enable shadow receiving
+            scene.add(road); */
+
+            const curvePoints = [
+                0, 0, -0,
+                0, 0, 80,
+                80, 0, 80,
+                80, 0, -80,
+                0, 0, -80,
+                0, 0, -0
+
+                
+                
+                
+            ];
+
+            const pts = [];
+            for (let i = 0; i < curvePoints.length; i += 3) {
+                pts.push(new THREE.Vector3(curvePoints[i], curvePoints[i + 1], curvePoints[i + 2]));
+            }
+
+            const ls = 1400; // length segments
+            const ws = 5; // width segments 
+            const lss = ls + 1;
+            const wss = ws + 1;
+
+            const curve = new THREE.CatmullRomCurve3(pts);
+            const points = curve.getPoints(ls);
+            const len = curve.getLength();
+            const lenList = curve.getLengths(ls);
+
+            const faceCount = ls * ws * 2;
+            const vertexCount = lss * wss;
+
+            const indices = new Uint32Array(faceCount * 3);
+            const vertices = new Float32Array(vertexCount * 3);
+            const uvs = new Float32Array(vertexCount * 2);
+
+            const g = new THREE.BufferGeometry();
+            g.setIndex(new THREE.BufferAttribute(indices, 1));
+            g.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            g.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+
+            let idxCount = 0;
+            let a, b1, c1, c2;
+
+            for (let j = 0; j < ls; j++) {
+            for (let i = 0; i < ws; i++) {
+                a = wss * j + i;
+                b1 = wss * (j + 1) + i;
+                c1 = wss * (j + 1) + 1 + i;
+                c2 = wss * j + 1 + i;
+
+                indices[idxCount] = a;
+                indices[idxCount + 1] = b1;
+                indices[idxCount + 2] = c1;
+
+                indices[idxCount + 3] = a;
+                indices[idxCount + 4] = c1;
+                indices[idxCount + 5] = c2;
+
+                g.addGroup(idxCount, 6, i);
+
+                idxCount += 6;
+            }
+        }
+
+        let uvIdxCount = 0;
+
+        for (let j = 0; j < lss; j++) {
+            for (let i = 0; i < wss; i++) {
+                uvs[uvIdxCount] = lenList[j] / len;
+                uvs[uvIdxCount + 1] = i / ws;
+
+                uvIdxCount += 2;
+            }
+        }
+        let x, y, z;
+let posIdx = 0; // position index
+
+let tangent;
+const normal = new THREE.Vector3();
+const binormal = new THREE.Vector3(0, 1, 0);
+
+const t = []; // tangents
+const n = []; // normals
+const b = []; // binormals
+
+for (let j = 0; j < lss; j++) {
+    tangent = curve.getTangent(j / ls);
+    t.push(tangent.clone());
+
+    normal.crossVectors(tangent, binormal);
+    normal.y = 0;
+    normal.normalize();
+    n.push(normal.clone());
+
+    binormal.crossVectors(normal, tangent);
+    b.push(binormal.clone());
+}
+
+const dw = [-4, -3.7, -0.06, 0.06, 3.7, 4];
+
+for (let j = 0; j < lss; j++) {
+    for (let i = 0; i < wss; i++) {
+        x = points[j].x + dw[i] * n[j].x;
+        y = points[j].y; // Keep the y-coordinate unchanged
+        z = points[j].z + dw[i] * n[j].z;
+
+        vertices[posIdx] = x;
+        vertices[posIdx + 1] = y;
+        vertices[posIdx + 2] = z;
+
+        posIdx += 3;
+    }
+}
+const tex = new THREE.TextureLoader().load('CentralMarking.png');
+tex.wrapS = THREE.RepeatWrapping;
+tex.repeat.set(ls * 2);
+
+const material = [
+    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
+];
+
+const roadMesh = new THREE.Mesh(g, material);
+/* roadMesh.position.set(1.7, 0, 0);
+roadMesh.rotation.y = -1; */
+scene.add(roadMesh);
+
+
+animate();
+
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
+
+            
+
+           /*  // Add road lines
+            const roadLineGeometry = new THREE.PlaneGeometry(0.1, 30); // Narrow planes for road lines
+            const roadLineMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff }); // White road lines
+            const roadLine1 = new THREE.Mesh(roadLineGeometry, roadLineMaterial);
+            const roadLine2 = new THREE.Mesh(roadLineGeometry, roadLineMaterial);
+            roadLine1.rotation.x = -Math.PI / 2;
+            roadLine2.rotation.x = -Math.PI / 2;
+            roadLine1.position.set(0, 0.01, -5); // Position road lines along the road
+            roadLine2.position.set(0, 0.01, 5);
+            scene.add(roadLine1);
+            scene.add(roadLine2); */
+
+            
+
+            // Create trees
+            /* const treeGeometry = new THREE.BoxGeometry(0.5, 1, 0.5);
+            const treeMaterial = new THREE.MeshPhongMaterial({ color: 0x228B22 }); // Green color for trees
+            const numTrees = 5; // Number of trees
+            const treeSpacing = 5; // Spacing between trees
+            const treeOffset = 7; // Offset from the road
+            for (let i = 0; i < numTrees; i++) {
+                const tree = new THREE.Mesh(treeGeometry, treeMaterial);
+                tree.position.set(treeOffset, 0.5, -10 + i * treeSpacing); // Adjust tree positions
+                tree.castShadow = true; // Enable shadow casting for trees
+                scene.add(tree);
+            } */
+
+            // Define the number of trees you want
+            var numberOfTrees = 5;
+
+            // Loop to create and position each tree
+            for (var i = 0; i < numberOfTrees; i++) {
+                var tree = createTree(); // Create a tree using a function (explained below)
+                
+                // Position each tree differently
+                tree.position.set(7, 1.5, -10 + i * 5);
+                tree.scale.set(2, 2, 2, 2);
+                scene.add(tree); // Add the tree to the scene
+            }
+            for (var i = 0; i < numberOfTrees; i++) {
+                var tree = createTree(); // Create a tree using a function (explained below)
+                
+                // Position each tree differently
+                tree.position.set(-7, 1.5, -10 + i * 5);
+                tree.scale.set(2, 2, 2, 2);
+                scene.add(tree); // Add the tree to the scene
+            }
+
+            
+
+            
+
+            
+            const minX = -0  + 5; // Min X position
+            const maxX = 80  - 5; // Max X position
+            const minZ = -80  + 5; // Min Z position
+            const maxZ = 80  - 5; // Max Z position
+
+            // Define the number of trees you want inside the road
+            const numberOfTreesInsideRoad = 25;
+
+            // Loop to create and position each tree inside the road
+            for (let i = 0; i < numberOfTreesInsideRoad; i++) {
+                const tree = createTree(); // Create a tree using the function from your code
+
+                // Generate random positions for trees within the road bounds
+                const randomX = THREE.MathUtils.randFloat(minX, maxX);
+                const randomZ = THREE.MathUtils.randFloat(minZ, maxZ);
+
+                tree.position.set(randomX, 1.5, randomZ);
+                tree.scale.set(2, 2, 2);
+                scene.add(tree); // Add the tree to the scene
+            }
+
+
+
+
+            // Function to create a single tree
+            function createTree() {
+                var geometry = new THREE.BoxGeometry(1, 1, 1);
+
+                var leaveDarkMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+                var leaveLightMaterial = new THREE.MeshLambertMaterial({ color: 0x226A00 });
+                var stemMaterial = new THREE.MeshLambertMaterial({ color: 0x7D5A4F });
+
+                var stem = new THREE.Mesh(geometry, stemMaterial);
+                stem.position.set(0, 0, 0);
+                stem.scale.set(0.3, 1.5, 0.3);
+                stem.castShadow = true; // Enable shadow casting for the stem
+
+                var squareLeave01 = new THREE.Mesh(geometry, leaveDarkMaterial);
+                squareLeave01.position.set(0.5, 1.6, 0.5);
+                squareLeave01.scale.set(0.8, 0.8, 0.8);
+                squareLeave01.castShadow = true; // Enable shadow casting for the leaves
+
+                var squareLeave02 = new THREE.Mesh(geometry, leaveDarkMaterial);
+                squareLeave02.position.set(-0.4, 1.3, -0.4);
+                squareLeave02.scale.set(0.7, 0.7, 0.7);
+                squareLeave02.castShadow = true; // Enable shadow casting for the leaves
+
+                var squareLeave03 = new THREE.Mesh(geometry, leaveLightMaterial);
+                squareLeave03.position.set(0.4, 1.7, -0.5);
+                squareLeave03.scale.set(0.7, 0.7, 0.7);
+                squareLeave03.castShadow = true; // Enable shadow casting for the leaves
+
+                var leaveDark = new THREE.Mesh(geometry, leaveLightMaterial);
+                leaveDark.position.set(0, 1.2, 0);
+                leaveDark.scale.set(1, 2, 1);
+                leaveDark.castShadow = true; // Enable shadow casting for the leaves
+
+                var leaveLight = new THREE.Mesh(geometry, leaveLightMaterial);
+                leaveLight.position.set(0, 1.2, 0);
+                leaveLight.scale.set(1.1, 0.5, 1.1);
+                leaveLight.castShadow = true; // Enable shadow casting for the leaves
+
+                const tree = new THREE.Group();
+                tree.add(leaveDark);
+                tree.add(leaveLight);
+                tree.add(squareLeave01);
+                tree.add(squareLeave02);
+                tree.add(squareLeave03);
+                tree.add(stem);
+
+                tree.rotation.y = 0;
+                tree.rotation.x = 0;
+                
+                return tree; // Return the tree object
+            }
+
+
+            // Create car
+            const carGeometry = new THREE.BoxGeometry(1, 0.5, 2);
+            const carMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+            car = new THREE.Mesh(carGeometry, carMaterial);
+            car.position.set(0, 0.25, 0);
+            car.castShadow = true; // Enable shadow casting for the car
+            scene.add(car);
+
+            // Set initial camera position
+            camera.position.set(0, 5, -10);
+
+            // Render the scene
+            render();
+
+            // Add event listeners for car movement
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+        }
+
+        let startTime = 0;       // Time when the car crosses the start point
+let elapsedTime = 0;     // Elapsed time since the car crossed the start point
+let isTimerRunning = false;  // Flag to check if the timer is running
+let turn = 0;
+
+function startTimer() {
+    isTimerRunning = true;      // Set the timer flag to true
+    startTime = Date.now();     // Get the current time in milliseconds
+}
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Backspace') {
+        resetTimer();
+    }
+});
+function resetTimer() {
+    startTime = Date.now();
+    elapsedTime = 0;
+    isTimerRunning = false;
+    car.position.set(0, 0.25, 0);
+    car.rotation.set(0, 0, 0);
+    turn = 0;
+}
+
+
+
+        function render() {
+            requestAnimationFrame(render);
+            updateCarMovement(); // Update car movement 
+            updateCameraPosition(); // Update camera position
+            // Update the elapsed time if the timer is running
+            if (isTimerRunning) {
+                elapsedTime = Date.now() - startTime;
+            }
+
+            // Convert milliseconds to seconds
+            const seconds = (elapsedTime / 1000).toFixed(2);
+
+            // Update the timer element content
+            document.getElementById('timer').textContent = `Elapsed Time: ${seconds} seconds`;
+
+            renderer.render(scene, camera);
+        }
+
+        const movement = {
+            forward: false,
+            backward: false,
+            left: false,
+            right: false
+        };
+
+        function onKeyDown(event) {
+            switch (event.key) {
+                case 'ArrowUp':
+                    movement.backward = true;
+                    break;
+                case 'ArrowDown':
+                    movement.forward = true;
+                    break;
+                case 'ArrowLeft':
+                    movement.left = true;
+                    break;
+                case 'ArrowRight':
+                    movement.right = true;
+                    break;
+            }
+        }
+
+        function onKeyUp(event) {
+            switch (event.key) {
+                case 'ArrowUp':
+                    movement.backward = false;
+                    break;
+                case 'ArrowDown':
+                    movement.forward = false;
+                    break;
+                case 'ArrowLeft':
+                    movement.left = false;
+                    break;
+                case 'ArrowRight':
+                    movement.right = false;
+                    break;
+            }
+        }
+
+        function updateCarMovement() {
+            const speed = 0.2;
+            const steeringAngle = 0.02; // Adjust steering sensitivity
+
+            if (movement.forward) {
+                car.translateZ(-speed);
+            }
+            if (movement.backward) {
+                car.translateZ(speed);
+            }
+            if (movement.left) {
+                car.rotation.y += steeringAngle;
+            }
+            if (movement.right) {
+                car.rotation.y -= steeringAngle;
+            }
+            if (car.position.z <= 3 && car.position.z >=2 && car.position.x >= -10 && car.position.x <=10 && !isTimerRunning && turn === 0) {
+        startTimer();
+            }
+
+            if (car.position.z <= 2 && car.position.z >=1 && car.position.x >= -10 && car.position.x <=10 && isTimerRunning) {
+                isTimerRunning = false;
+                turn++;
+            }
+        }
+
+        function updateCameraPosition() {
+            // Update camera position to follow the car
+            const distance = 10;
+            camera.position.x = car.position.x - Math.sin(car.rotation.y) * distance;
+            camera.position.z = car.position.z - Math.cos(car.rotation.y) * distance;
+            camera.lookAt(car.position); // Look at the car
+        }
+
+        init();
+    </script>
+</body>
+</html>
