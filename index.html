@@ -14,7 +14,7 @@
 
     <script type="module">
         
-        let scene, camera, renderer, car;
+        let scene, camera, renderer, car = new THREE.Object3D();
         import { OrbitControls } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
         import { GLTFLoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
         
@@ -28,6 +28,21 @@
             plane.rotation.x = -Math.PI / 2;
             plane.position.y = -0.01;
             scene.add(plane);
+
+            
+
+            const loader = new GLTFLoader();
+            loader.load('scene.gltf', function(gltf) {
+                car.add(gltf.scene)
+                car.scale.set(0.04, 0.04, 0.04);
+                car.position.set(0, 0.25, 0);
+                gltf.scene.rotation.y = -Math.PI/2;
+                
+                car.castShadow = true; // Enable shadow casting for the car
+                scene.add(car);
+            }, undefined, function(error) {
+                console.error(error);
+            });
 
             // Create camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -336,15 +351,15 @@ function animate() {
 
 
             // Create car
-            const carGeometry = new THREE.BoxGeometry(1, 0.5, 2);
+            /* const carGeometry = new THREE.BoxGeometry(1, 0.5, 2);
             const carMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
             car = new THREE.Mesh(carGeometry, carMaterial);
             car.position.set(0, 0.25, 0);
             car.castShadow = true; // Enable shadow casting for the car
-            scene.add(car);
+            scene.add(car); */
 
             // Set initial camera position
-            camera.position.set(0, 5, -10);
+            camera.position.set(0, 5, 10);
 
             // Render the scene
             render();
@@ -440,8 +455,8 @@ function resetTimer() {
         }
 
         function updateCarMovement() {
-            const speed = 0.2;
-            const steeringAngle = 0.02; // Adjust steering sensitivity
+            const speed = 0.5;
+            const steeringAngle = 0.03; // Adjust steering sensitivity
 
             if (movement.forward) {
                 car.translateZ(-speed);
@@ -455,11 +470,12 @@ function resetTimer() {
             if (movement.right) {
                 car.rotation.y -= steeringAngle;
             }
+            console.log(car.position.x);
             if (car.position.z <= 3 && car.position.z >=2 && car.position.x >= -10 && car.position.x <=10 && !isTimerRunning && turn === 0) {
         startTimer();
             }
 
-            if (car.position.z <= 2 && car.position.z >=1 && car.position.x >= -10 && car.position.x <=10 && isTimerRunning) {
+            if (car.position.z <= -3 && car.position.z >=-5 && car.position.x >= -10 && car.position.x <=10 && isTimerRunning) {
                 isTimerRunning = false;
                 turn++;
             }
