@@ -1,0 +1,11 @@
+Model Information:
+* title:	Administration
+* source:	https://sketchfab.com/3d-models/administration-404feb0925964dd7ad224c6401dfe062
+* author:	kirsel91 (https://sketchfab.com/kirsel91)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Administration" (https://sketchfab.com/3d-models/administration-404feb0925964dd7ad224c6401dfe062) by kirsel91 (https://sketchfab.com/kirsel91) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

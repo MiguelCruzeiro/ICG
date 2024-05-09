@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Racing Game End Page</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; text-align: center; }
+        h1 { margin-bottom: 20px; }
+        p { margin-bottom: 30px; }
+        #restartButton { font-size: 24px; padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Congratulations!</h1>
+    <p>You completed the race!</p>
+    <p>Your time: <span id="timeDisplay"></span></p>
+    <button id="restartButton">Restart Game</button>
+    <!-- Show the top scores -->
+    <h2>Top Scores</h2>
+    <ul id="topScores"></ul>
+
+    <script>
+        // Retrieve time from URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const time = urlParams.get('time');
+        document.getElementById('timeDisplay').textContent = time + " seconds";
+
+        // Add event listener to restart button
+        document.getElementById('restartButton').addEventListener('click', function() {
+            window.location.href = 'game.html'; // Redirect to the start page
+        });
+
+        function getTopScores() {
+            // Retrieve scores from local storage or initialize an empty array
+            let scores = JSON.parse(localStorage.getItem('racingScores')) || [];
+            return scores;
+        }
+
+        // Update the top scores list
+        function updateTopScores() {
+            const topScores = getTopScores();
+            const topScoresList = document.getElementById('topScores');
+            topScoresList.innerHTML = ''; // Clear existing list
+
+            topScores.forEach((score, index) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${index + 1}. ${score} seconds`;
+                topScoresList.appendChild(listItem);
+            });
+        }
+
+        // Call the updateTopScores function when the page loads to display the top scores
+        window.onload = updateTopScores;
+    </script>
+</body>
+</html>

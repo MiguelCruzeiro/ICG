@@ -1,0 +1,11 @@
+Model Information:
+* title:	8x9 One Storey House Design
+* source:	https://sketchfab.com/3d-models/8x9-one-storey-house-design-6a503347e6bc4e7a8cf67d9ce62678e1
+* author:	benhur taşkın (https://sketchfab.com/betaarch)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "8x9 One Storey House Design" (https://sketchfab.com/3d-models/8x9-one-storey-house-design-6a503347e6bc4e7a8cf67d9ce62678e1) by benhur taşkın (https://sketchfab.com/betaarch) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

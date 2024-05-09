@@ -1,0 +1,11 @@
+Model Information:
+* title:	Simple tree 6
+* source:	https://sketchfab.com/3d-models/simple-tree-6-cf19cc8e6fd8418591117d09964f281c
+* author:	darref (https://sketchfab.com/darref)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Simple tree 6" (https://sketchfab.com/3d-models/simple-tree-6-cf19cc8e6fd8418591117d09964f281c) by darref (https://sketchfab.com/darref) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
