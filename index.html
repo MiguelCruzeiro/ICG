@@ -4,10 +4,60 @@
     <meta charset="UTF-8">
     <title>Racing Game Start Page</title>
     <style>
-        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; text-align: center; }
-        h1 { margin-bottom: 20px; }
-        p { margin-bottom: 30px; }
-        #startButton { font-size: 24px; padding: 10px 20px; cursor: pointer; }
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ffffff;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 3em;
+            color: #f2d05e;
+            text-shadow: 2px 2px #000;
+        }
+        p {
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        #startButton {
+            font-size: 24px;
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            background-color: #f2d05e;
+            color: #000;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        #startButton:hover {
+            background-color: #ffe06a;
+            transform: scale(1.05);
+        }
+        #startButton:active {
+            background-color: #d8b045;
+            transform: scale(1);
+        }
+        h2 {
+            margin-top: 50px;
+            font-size: 2em;
+            text-shadow: 1px 1px #000;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            font-size: 1.2em;
+            margin: 5px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
     </style>
 </head>
 <body>

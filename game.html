@@ -2,18 +2,129 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Improved Three.js Track and Car</title>
+    <title>Racing Car Game</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
+        html, body {
+            overflow: hidden;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #timer, #laps {
+            position: absolute;
+            top: 10px;
+            font-size: 55px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #timer {
+            right: 10px;
+        }
+
+        #laps {
+            left: 10px;
+        }
+
+        #loading-screen {
+            position: absolute;
+            z-index: 2;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            opacity: 1;
+            transition: 1s opacity;
+        }
+
+        #loading-screen.fade-out {
+            opacity: 0;
+        }
+
+        #loader {
+            display: block;
+            position: relative;
+            left: 50%;
+            top: 50%;
+            width: 150px;
+            height: 150px;
+            margin: -75px 0 0 -75px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #9370DB;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+        }
+        #loader:before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #BA55D3;
+            -webkit-animation: spin 3s linear infinite;
+            animation: spin 3s linear infinite;
+        }
+        #loader:after {
+            content: "";
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #FF00FF;
+            -webkit-animation: spin 1.5s linear infinite;
+            animation: spin 1.5s linear infinite;
+        }
+        @-webkit-keyframes spin {
+            0%   {
+                -webkit-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+        @keyframes spin {
+            0%   {
+                -webkit-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
+    <section id="loading-screen">
+
+        <div id="loader"></div>
+    
+    </section>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    <div id="timer" style="position: absolute; top: 10px; left: 1120px; font-size: 55px; color: white;"></div>
-    <!-- a div with the number of laps-->
-    <div id="laps" style="position: absolute; top: 10px; left: 10px; font-size: 55px; color: white;"></div>
+    <div id="timer"></div>
+    <!-- a div with the number of laps -->
+    <div id="laps"></div>
 
     <script type="module">
         
@@ -29,14 +140,12 @@
         let carBody, planeBody;
         let vehicle;
         let seconds = 0;
+        let barrier, barrier1, barrier2, barrier3, barrier4, barrier5, barrier6;
 
         const stats = new Stats()
         stats.showPanel(0) // 0: fps, 1: ms, 2: mb, 3+: custom
         document.body.appendChild(stats.dom)
 
-        
-
-        
 
         function initPhysics() {
             
@@ -275,7 +384,7 @@
             }
 
             // Calculate the interval to place the barriers
-            const interval = Math.floor((points.length + 40) / (numBarriers -40)); // Adjust as needed
+            const interval = Math.floor((points.length + 30) / (numBarriers - 30)); // Adjust as needed
 
             // Create barriers alongside the road
             for (let i = 1; i <= numBarriers; i++) {
@@ -291,15 +400,16 @@
                 // const for brown color
                 const brown = 0x8B4513;
                 
-                // Create left barrier
-                const leftBarrier = new THREE.Mesh(createBarrierGeometry(), new THREE.MeshPhongMaterial({ color: brown }));
+                const darkGrey = 0x696969;
+
+                const leftBarrier = new THREE.Mesh(createBarrierGeometry(), new THREE.MeshPhongMaterial({ color: darkGrey }));
                 leftBarrier.castShadow = true;
                 const leftBarrierPosition = point.clone().add(normal.clone().multiplyScalar(-5.5)); // Adjust 5 based on barrier position
                 leftBarrier.position.set(leftBarrierPosition.x, barrierHeight / 2, leftBarrierPosition.z);
                 scene.add(leftBarrier);
 
                 // Create right barrier
-                const rightBarrier = new THREE.Mesh(createBarrierGeometry(), new THREE.MeshPhongMaterial({ color: brown }));
+                const rightBarrier = new THREE.Mesh(createBarrierGeometry(), new THREE.MeshPhongMaterial({ color: darkGrey }));
                 rightBarrier.castShadow = true;
                 const rightBarrierPosition = point.clone().add(normal.clone().multiplyScalar(5.5)); // Adjust 5 based on barrier position
                 rightBarrier.position.set(rightBarrierPosition.x, barrierHeight / 2, rightBarrierPosition.z);
@@ -370,6 +480,12 @@
         startTimer();
             }
 
+            if (car.position.z <= -3 && car.position.z >=-3.3 && car.position.x >= 85 && car.position.x <=105 && isTimerRunning && turn === 1) {
+                //isTimerRunning = false;
+                //turn++;
+                createbarriers();
+            }
+
             if (car.position.z <= -3 && car.position.z >=-3.3 && car.position.x >= -10 && car.position.x <=10 && isTimerRunning && turn === 1) {
                 //isTimerRunning = false;
                 turn++;
@@ -384,6 +500,43 @@
             }
 
         }
+
+        function createbarriers() {
+            scene.add(barrier);
+            const barrierShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.8, 1.0));
+            const barrierBody = new CANNON.Body({ mass: 0 });
+            barrierBody.addShape(barrierShape);
+            barrierBody.position.set(-2.2, 1.8, 11);
+            physicsWorld.addBody(barrierBody);
+            scene.add(barrier2);
+            const barrierShape2 = new CANNON.Box(new CANNON.Vec3(1.5, 0.8, 1.0));   
+            const barrierBody2 = new CANNON.Body({ mass: 0 });
+            barrierBody2.addShape(barrierShape2);
+            barrierBody2.position.set(36.5, 1.8, 93);
+            barrierBody2.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI/2);
+            physicsWorld.addBody(barrierBody2);
+            scene.add(barrier3);
+            const barrierShape3 = new CANNON.Box(new CANNON.Vec3(1.5, 0.8, 1.0));
+            const barrierBody3 = new CANNON.Body({ mass: 0 });
+            barrierBody3.addShape(barrierShape3);
+            barrierBody3.position.set(-0.4, 1.8, 29);
+            physicsWorld.addBody(barrierBody3);
+            scene.add(barrier4);
+            const barrierShape4 = new CANNON.Box(new CANNON.Vec3(1.5, 0.8, 1.0));
+            const barrierBody4 = new CANNON.Body({ mass: 0 });
+            barrierBody4.addShape(barrierShape4);
+            barrierBody4.position.set(94.5, 1.8, 11.2);
+            physicsWorld.addBody(barrierBody4);
+            scene.add(barrier5);
+            const barrierShape5 = new CANNON.Box(new CANNON.Vec3(1.5, 0.8, 1.0));
+            const barrierBody5 = new CANNON.Body({ mass: 0 });
+            barrierBody5.addShape(barrierShape5);
+            barrierBody5.position.set(46.5, 1.8, -92.8);
+            barrierBody5.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI/2);
+            physicsWorld.addBody(barrierBody5);
+
+        }
+            
 
         function saveScore(time) {
             // Retrieve existing scores from local storage or initialize an empty array
@@ -421,6 +574,11 @@
             texture.repeat.set(100, 100);
             plane.material.map = texture;
 
+            const loadingManager = new THREE.LoadingManager( () => {
+                const loadingScreen = document.getElementById( 'loading-screen' );
+                loadingScreen.classList.add( 'fade-out' );
+            } );
+
 
             // Create camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -450,7 +608,7 @@
             const fogDensity = 0.02; // Adjust as needed
             scene.fog = new THREE.Fog(fogColor, fogNear, fogFar);
 
-            const loader = new GLTFLoader();
+            const loader = new GLTFLoader( loadingManager );
             loader.load('models/car/scene.gltf', function(gltf) {
                 car.add(gltf.scene)
                 car.scale.set(0.045, 0.045, 0.045);
@@ -618,6 +776,37 @@
                 console.error(error);
             });
 
+            loader.load('models/road_barrier/scene.gltf', function(gltf) {
+                barrier = gltf.scene;
+                barrier.traverse(function(child) {
+                    if (child.isMesh) {
+                        if (child.material instanceof THREE.MeshBasicMaterial) {
+                            child.material = new THREE.MeshPhongMaterial({ color: 0xffffff });
+                        }
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                barrier.scale.set(1.0, 1.0, 1.0);
+                barrier.position.set(-1.5, 0, 10);
+                barrier2 = barrier.clone();
+                barrier2.position.set(35.5, 0, 92);
+                //rotate the barrier 90 degrees
+                barrier2.rotation.y = Math.PI/2;
+                barrier3 = barrier.clone();
+                barrier3.position.set(-1.5, 0, 30);
+                barrier3.rotation.y = Math.PI;
+                barrier4 = barrier.clone();
+                barrier4.position.set(95.5, 0, 10);
+                barrier5 = barrier.clone();
+                barrier5.position.set(45.5, 0, -93.8);
+                barrier5.rotation.y = Math.PI/2;
+                
+                
+            }, undefined, function(error) {
+                console.error(error);
+            });
+
             loader.load('models/middle-size_tree/scene.gltf', function(gltf) {
                 const middleSizeTree = gltf.scene;
                 middleSizeTree.traverse(function(child) {
@@ -744,7 +933,7 @@
 
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Backspace') {
-                resetTimer();
+                //resetTimer();
             }
         });
         function resetTimer() {
