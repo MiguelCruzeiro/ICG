@@ -141,6 +141,7 @@
         let vehicle;
         let seconds = 0;
         let barrier, barrier1, barrier2, barrier3, barrier4, barrier5, barrier6;
+        let engineSound;
 
         /* const stats = new Stats()
         stats.showPanel(0) // 0: fps, 1: ms, 2: mb, 3+: custom
@@ -157,7 +158,7 @@
              const carBody = new CANNON.Body({ 
                 mass: 150,
                 position: new CANNON.Vec3(0, 3, 0), // Set initial position of the car
-                shape: new CANNON.Box(new CANNON.Vec3(1.0, 0.5, 2)) // Set shape of the car
+                shape: new CANNON.Box(new CANNON.Vec3(1.0, 0.8, 2)) // Set shape of the car
             });
 
 
@@ -185,7 +186,7 @@
             wheelBodie1.angularDamping = 0.4;
             vehicle.addWheel({
                 body: wheelBodie1,
-                position: new CANNON.Vec3(-1.1, -0.2, axisWidth/2),
+                position: new CANNON.Vec3(-1.1, -0.5, axisWidth/2),
                 axis: new CANNON.Vec3(1, 0, 0),
                 direction: down
             });
@@ -195,7 +196,7 @@
             wheelBodie2.angularDamping = 0.4;
             vehicle.addWheel({
                 body: wheelBodie2,
-                position: new CANNON.Vec3(1.1, -0.2, axisWidth/2),
+                position: new CANNON.Vec3(1.1, -0.5, axisWidth/2),
                 axis: new CANNON.Vec3(1, 0, 0),
                 direction: down
             });
@@ -205,7 +206,7 @@
             wheelBodie3.angularDamping = 0.4;
             vehicle.addWheel({
                 body: wheelBodie3,
-                position: new CANNON.Vec3(-1.1, -0.2, -axisWidth/2),
+                position: new CANNON.Vec3(-1.1, -0.5, -axisWidth/2),
                 axis: new CANNON.Vec3(1, 0, 0),
                 direction: down
             });
@@ -215,7 +216,7 @@
             wheelBodie4.angularDamping = 0.4;
             vehicle.addWheel({
                 body: wheelBodie4,
-                position: new CANNON.Vec3(1.1, -0.2, -axisWidth/2),
+                position: new CANNON.Vec3(1.1, -0.5, -axisWidth/2),
                 axis: new CANNON.Vec3(1, 0, 0),
                 direction: down
             });
@@ -434,6 +435,7 @@
 
         
         
+        
         function updatePhysics() {
             // Step the physics simulation
             physicsWorld.step(1 / 60);
@@ -444,13 +446,13 @@
                 obj.mesh.quaternion.copy(obj.body.quaternion);
             });
 
-            const maxSteerVal = Math.PI / 6; // Maximum steering value
-            const maxSpeed = 70; // Maximum speed in units per second
+            const maxSteerVal = Math.PI / 5; // Maximum steering value
+            const maxSpeed = 85; // Maximum speed in units per second
 
             if (movement.forward) {
                 
-                vehicle.setWheelForce(-maxSpeed, 0);
-                vehicle.setWheelForce(-maxSpeed, 1);
+                vehicle.setWheelForce(-maxSpeed, 2);
+                vehicle.setWheelForce(-maxSpeed, 3);
             } else if (movement.backward) {
               
                 vehicle.setWheelForce(maxSpeed, 0);
@@ -458,10 +460,9 @@
             } else {
                 vehicle.setWheelForce(0, 0);
                 vehicle.setWheelForce(0, 1);
+                vehicle.setWheelForce(0, 2);
+                vehicle.setWheelForce(0, 3);
 
-                //get the speed of the car
-                const speed = vehicle.getWheelSpeed(0);
-                //console.log(speed);
 
             }
 
@@ -506,32 +507,32 @@
             const barrierShape = new CANNON.Box(new CANNON.Vec3(1.5, 0.8, 1.0));
             const barrierBody = new CANNON.Body({ mass: 0 });
             barrierBody.addShape(barrierShape);
-            barrierBody.position.set(-2.2, 1.8, 11);
+            barrierBody.position.set(-2.2, 2.1, 11);
             physicsWorld.addBody(barrierBody);
             scene.add(barrier2);
             const barrierShape2 = new CANNON.Box(new CANNON.Vec3(1.5, 0.8, 1.0));   
             const barrierBody2 = new CANNON.Body({ mass: 0 });
             barrierBody2.addShape(barrierShape2);
-            barrierBody2.position.set(36.5, 1.8, 93);
+            barrierBody2.position.set(36.5, 2.1, 93);
             barrierBody2.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI/2);
             physicsWorld.addBody(barrierBody2);
             scene.add(barrier3);
             const barrierShape3 = new CANNON.Box(new CANNON.Vec3(1.5, 0.8, 1.0));
             const barrierBody3 = new CANNON.Body({ mass: 0 });
             barrierBody3.addShape(barrierShape3);
-            barrierBody3.position.set(-0.4, 1.8, 29);
+            barrierBody3.position.set(-0.4, 2.1, 29);
             physicsWorld.addBody(barrierBody3);
             scene.add(barrier4);
             const barrierShape4 = new CANNON.Box(new CANNON.Vec3(1.5, 0.8, 1.0));
             const barrierBody4 = new CANNON.Body({ mass: 0 });
             barrierBody4.addShape(barrierShape4);
-            barrierBody4.position.set(94.5, 1.8, 11.2);
+            barrierBody4.position.set(94.5, 2.1, 11.2);
             physicsWorld.addBody(barrierBody4);
             scene.add(barrier5);
             const barrierShape5 = new CANNON.Box(new CANNON.Vec3(1.5, 0.8, 1.0));
             const barrierBody5 = new CANNON.Body({ mass: 0 });
             barrierBody5.addShape(barrierShape5);
-            barrierBody5.position.set(46.5, 1.8, -92.8);
+            barrierBody5.position.set(46.5, 2.1, -92.8);
             barrierBody5.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI/2);
             physicsWorld.addBody(barrierBody5);
 
@@ -587,6 +588,22 @@
             camera.position.set(0, 10, 10); // Behind and above the car
             camera.lookAt(new THREE.Vector3(0, 0, 0)); // Look at the center of the scene
 
+            const listener = new THREE.AudioListener();
+            camera.add(listener);  // Assuming you have a camera in your scene
+
+            engineSound = new THREE.Audio(listener);
+
+            const audioLoader = new THREE.AudioLoader();
+            audioLoader.load('models/audio.mp3', function(buffer) {
+                engineSound.setBuffer(buffer);
+                engineSound.setLoop(true);
+                engineSound.setVolume(0.005);
+                engineSound.play();
+            });
+
+
+
+
             // Create renderer
             renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -626,6 +643,24 @@
                 scene.add(car);
                 // Initialize physics
                 
+            }, undefined, function(error) {
+                console.error(error);
+            });
+
+            loader.load('models/finish/scene.gltf', function(gltf) {
+                const finish = gltf.scene;
+                finish.traverse(function(child) {
+                    if (child.isMesh) {
+                        if (child.material instanceof THREE.MeshBasicMaterial) {
+                            child.material = new THREE.MeshPhongMaterial({ color: 0xffffff });
+                        }
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                finish.scale.set(11.5, 11.5, 11.5);
+                finish.position.set(0, 0, 0);
+                scene.add(finish);
             }, undefined, function(error) {
                 console.error(error);
             });
