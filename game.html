@@ -568,17 +568,19 @@
             plane.position.y = -0.01;
             scene.add(plane);
 
-            //add a texture to the plane
-            const texture = new THREE.TextureLoader().load('models/grass.jpg');
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(100, 100);
-            plane.material.map = texture;
+            
 
             const loadingManager = new THREE.LoadingManager( () => {
                 const loadingScreen = document.getElementById( 'loading-screen' );
                 loadingScreen.classList.add( 'fade-out' );
             } );
+
+            //add a texture to the plane
+            const texture = new THREE.TextureLoader( loadingManager ).load('models/stone1.jpeg');
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(100, 100);
+            plane.material.map = texture;
 
 
             // Create camera
@@ -928,7 +930,7 @@
 
 
             // Add lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
             directionalLight.position.set(-100, 100, 200);
