@@ -24,11 +24,26 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
+        #camera-view {
+            position: absolute;
+            top: 120px;
+            font-size: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
         #timer {
             right: 10px;
         }
 
         #laps {
+            left: 10px;
+        }
+
+        #camera-view {
             left: 10px;
         }
 
@@ -126,9 +141,11 @@
     <!-- a div with the number of laps -->
     <div id="laps"></div>
 
+    <div id="camera-view">Change Camera: C</div>   
+
     <script type="module">
         
-        let scene, camera, renderer, car = new THREE.Object3D();
+        let scene, camera, activeCamera, cameraFirstPerson, cameraThirdPerson, renderer, car = new THREE.Object3D();
         import { OrbitControls } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
         import { GLTFLoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
         import CannonDebugger from "https://cdn.jsdelivr.net/npm/cannon-es-debugger@1.0.0/+esm";
@@ -584,14 +601,18 @@
 
 
             // Create camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            cameraThirdPerson = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            cameraThirdPerson.position.set(0, 10, 10);
+            cameraThirdPerson.lookAt(new THREE.Vector3(0, 0, 0));
 
-            // Set initial camera position
-            camera.position.set(0, 10, 10); // Behind and above the car
-            camera.lookAt(new THREE.Vector3(0, 0, 0)); // Look at the center of the scene
+            cameraFirstPerson = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            cameraFirstPerson.position.set(0, 2, 5); // Closer to the car's front
+
+            activeCamera = cameraThirdPerson; // Start with the third-person camera
+
 
             const listener = new THREE.AudioListener();
-            camera.add(listener);  // Assuming you have a camera in your scene
+            cameraThirdPerson.add(listener);  // Assuming you have a camera in your scene
 
             engineSound = new THREE.Audio(listener);
 
@@ -613,7 +634,7 @@
             document.body.appendChild(renderer.domElement);
 
             const distance = 15; // Adjust the distance as needed
-            const controls = new OrbitControls(camera, renderer.domElement);
+            const controls = new OrbitControls(cameraThirdPerson, renderer.domElement);
             controls.enableRotate = true; // Allow rotation
             controls.enableZoom = true; // Enable zooming
             controls.enablePan = false; // Disable panning
@@ -948,7 +969,7 @@
             scene.add(directionalLight);
 
             // Set initial camera position
-            camera.position.set(0, 5, 10);
+            cameraThirdPerson.position.set(0, 5, 10);
 
             // Render the scene
             render();
@@ -996,6 +1017,17 @@
 
         }
 
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'c' || event.key === 'C') {
+                if (activeCamera === cameraThirdPerson) {
+                    activeCamera = cameraFirstPerson;
+                } else {
+                    activeCamera = cameraThirdPerson;
+                }
+            }
+        });
+
+
 
 
         function render() {
@@ -1014,7 +1046,7 @@
             document.getElementById('timer').textContent = `Time: ${seconds}s`;
             document.getElementById('laps').textContent = `Lap: ${turn}/2`;
 
-            renderer.render(scene, camera);
+            renderer.render(scene, activeCamera);
             // Call the update method on cannonDebugRenderer
             if (physicsWorld) {
                 updatePhysics();
@@ -1069,20 +1101,44 @@
 
        
         function updateCameraPosition() {
-            // Calculate new camera position relative to the car
-            const q = new THREE.Quaternion();
-            const cameraOffset = new THREE.Vector3(0, 5, -10);
-            cameraOffset.applyQuaternion(car.getWorldQuaternion(q));
-            cameraOffset.add(car.position);
+    if (activeCamera === cameraThirdPerson) {
+        const q = new THREE.Quaternion();
+        const cameraOffset = new THREE.Vector3(0, 5, -10);
+        cameraOffset.applyQuaternion(car.getWorldQuaternion(q));
+        cameraOffset.add(car.position);
 
-            const cameraLookAt = new THREE.Vector3(0, 0, 0);
-            cameraLookAt.applyQuaternion(car.getWorldQuaternion(q));
-            cameraLookAt.add(car.position);
+        const cameraLookAt = new THREE.Vector3(0, 0, 0);
+        cameraLookAt.applyQuaternion(car.getWorldQuaternion(q));
+        cameraLookAt.add(car.position);
 
-            const step = 0.05;
-            camera.position.lerp(cameraOffset, step);
-            camera.lookAt(cameraLookAt);
-        }
+        const step = 0.05;
+        activeCamera.position.lerp(cameraOffset, step);
+        activeCamera.lookAt(cameraLookAt);
+    } else if (activeCamera === cameraFirstPerson) {
+        // First-person camera
+        const q = new THREE.Quaternion();
+        
+        // Directly use car's world quaternion for the camera's rotation
+        car.getWorldQuaternion(q);
+        
+        // Position the camera in front of the car
+        const cameraOffset = new THREE.Vector3(0, 0.5, 1);
+        cameraOffset.applyQuaternion(q);
+        cameraOffset.add(car.position);
+
+        const cameraLookAt = new THREE.Vector3(0.2, 0.5, 4);
+        cameraLookAt.applyQuaternion(car.getWorldQuaternion(q));
+        cameraLookAt.add(car.position);
+        
+        // Position and orientation of the camera
+        activeCamera.position.copy(cameraOffset);
+        activeCamera.quaternion.copy(q);
+        activeCamera.lookAt(cameraLookAt);
+    }
+
+
+}
+
 
         
         init();
